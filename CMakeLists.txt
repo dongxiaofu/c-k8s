@@ -11,3 +11,7 @@ add_executable(apiServer
 add_executable(server server.c)
 
 add_executable(client client.c)
+
+#test
+add_executable(test_http
+        http/test_http.c http/http.h http/http.c)

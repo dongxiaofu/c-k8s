@@ -1,11 +1,12 @@
 //
-// Created by chugang on 2020/4/6.
+// Created by chugang on 2020/4/7.
 //
 
 #include <strings.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "http/http.h"
+
 
 int main() {
     char *body;
@@ -29,6 +30,3 @@ int main() {
 
     return 0;
 }
-
-
-
