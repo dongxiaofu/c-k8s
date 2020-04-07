@@ -21,7 +21,12 @@ int tcpConnect(const char *host);
 #define SERVER_PORT_STR "2379"
 #define ETCD_HOST "127.0.0.1"
 
-void put(char *params, char *body, char *host);
+typedef struct EtcdParams{
+    char *key;
+    char *params;
+}EtcdParams;
+
+void put(EtcdParams *params, char *body, char *host);
 
 void get(char *params, char *body, char *host);
 

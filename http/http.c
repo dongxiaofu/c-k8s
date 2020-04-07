@@ -3,34 +3,36 @@
 //
 #include "http.h"
 
-void put(char *params, char *body, char *host) {
+void put(EtcdParams *etcdParams, char *body, char *host) {
+    char *params = etcdParams->params;
+    char *key = etcdParams->key;
     int clientSocket = tcpConnect(host);
     fd_set fdSet;
     struct timeval tv;
     int dataLen = BUFSIZE * 4;
     char str1[dataLen], str2[dataLen];
-
     memset(str1, 0, dataLen);
-    strcat(str1, "POST /v3/kv/put HTTP/1.1\n");
+    strcat(str1, "PUT /v2/keys");
+    strcat(str1, etcdParams->key);
+    strcat(str1, " HTTP/1.1\n");
     strcat(str1, "Connection:closed\n");
     strcat(str1, "Host:");
     strcat(str1, host);
     strcat(str1, ":");
     strcat(str1, SERVER_PORT_STR);
     strcat(str1, "\n");
-    strcat(str1, "Content-Type:application/json;charset=utf-8");
-    strcat(str1, "\n");
+    strcat(str1, "Content-Type:application/x-www-form-urlencoded\n");
     strcat(str1, "Content-Length:");
     memset(str2, 0, dataLen);
     strcat(str2, params);
     char *contentLength = (char *) malloc(128);
-    sprintf(contentLength, "%lu", strlen(str2));
+    sprintf(contentLength, "%lu", strlen(str2) + strlen("value="));
     strcat(str1, contentLength);
     strcat(str1, "\n");
     // todo 请求头结束之后，只有一个回车换行符\r\n
     strcat(str1, "\r\n");
+    strcat(str1, "value=");
     strcat(str1, params);
-    strcat(str1, "\n");
 
     write(clientSocket, str1, strlen(str1));
 
@@ -51,13 +53,13 @@ void put(char *params, char *body, char *host) {
 
         memset(body, 0, BUFSIZE);
         if (h > 0) {
-            char *line = (char *) malloc(sizeof(char) * BUFSIZE);
-            int len = read(clientSocket, line, BUFSIZE);
+            int dataSize = sizeof(char) * BUFSIZE;
+            char *line = (char *) malloc(dataSize);
+            int len = read(clientSocket, line, dataSize);
             if (len == -1) {
                 printf("read over\n");
                 break;
             }
-
             parseHttp(line, body);
             close(clientSocket);
             break;
@@ -162,6 +164,7 @@ void parseHttp(char *data, char *body) {
 
 
 int tcpConnect(const char *host) {
+
     int clientSocket = -1;
     struct sockaddr_in serverAddr;
 
@@ -169,7 +172,6 @@ int tcpConnect(const char *host) {
         perror("socket");
         return 1;
     }
-
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
     serverAddr.sin_addr.s_addr = inet_addr(host);

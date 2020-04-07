@@ -15,3 +15,10 @@ add_executable(client client.c)
 #test
 add_executable(test_http
         http/test_http.c http/http.h http/http.c)
+
+add_executable(test_etcdClient
+        etcd-client/test_etcdClient.c
+        etcd-client/etcdClient.c
+        etcd-client/etcdClient.h
+        http/http.h
+        http/http.c)
