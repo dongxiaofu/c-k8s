@@ -4,7 +4,16 @@
 
 #include "etcd-client/etcdClient.h"
 
+void test_CreatePod();
+
+void test_getPod();
+
 int main() {
+//    test_CreatePod();
+    test_getPod();
+}
+
+void test_CreatePod() {
     Pod pod;
     pod.id = "nginx2";
     pod.config = "{\n"
@@ -40,8 +49,16 @@ int main() {
                  "}\n"
                  "";
 //    pod.config = "hello23-nginx";
-    char *body = (char *)malloc(sizeof(char) * BUFSIZE*4);
+    char *body = (char *) malloc(sizeof(char) * BUFSIZE * 4);
     createPod(pod, body);
+    printf("body:\n%s", body);
+}
+
+void test_getPod() {
+    char podId[7] = "nginx2";
+    char *body = (char *)malloc(sizeof(char) * BUFSIZE * 4);
+    printf("===========test\n");
+    getPod(podId, body);
     printf("body:\n%s", body);
 }
 

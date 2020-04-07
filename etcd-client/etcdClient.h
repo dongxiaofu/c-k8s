@@ -12,7 +12,7 @@ void *makePodKey(char *podId, char *podKey);
 
 void createPod(Pod pod, char *body);
 
-void getPod(char *params, char *body);
+void getPod(char *podId, char *body);
 
 
 

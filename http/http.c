@@ -72,29 +72,18 @@ void get(char *params, char *body, char *host) {
     fd_set fdSet;
     struct timeval tv;
     int dataLen = BUFSIZE * 4;
-    char str1[dataLen], str2[dataLen];
+    char str1[dataLen];
 
     memset(str1, 0, dataLen);
-    strcat(str1, "POST /v3/kv/range HTTP/1.1\n");
+    strcat(str1, "GET /v2/keys");
+    strcat(str1, params);
+    strcat(str1, " HTTP/1.1\n");
     strcat(str1, "Host:");
     strcat(str1, host);
     strcat(str1, ":");
     strcat(str1, SERVER_PORT_STR);
     strcat(str1, "\n");
-    strcat(str1, "Connection:closed\n");
-    strcat(str1, "Content-Type:application/json;charset=utf-8\n");
-
-    char *contentLength = (char *) malloc(128);
-    memset(str2, 0, dataLen);
-    strcat(str2, params);
-    sprintf(contentLength, "%lu", strlen(str2));
-    strcat(str1, "Content-Length:");
-    strcat(str1, contentLength);
-    strcat(str1, "\n");
     strcat(str1, "\r\n");
-    // 请求头结束，下面是请求主体
-    strcat(str1, params);
-
     write(clientSocket, str1, strlen(str1));
 
     FD_ZERO(&fdSet);

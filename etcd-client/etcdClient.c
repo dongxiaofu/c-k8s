@@ -3,16 +3,16 @@
 //
 #include "http/http.h"
 
-typedef struct Pod{
+typedef struct Pod {
     char *id;
     char *config;
-}Pod;
+} Pod;
 
 void makePodKey(char *podId, char *podKey);
 
 void createPod(Pod pod, char *body);
 
-void getPod(char *params, char *body);
+void getPod(char *podId, char *body);
 
 void makePodKey(char *podId, char *podKey) {
     memset(podKey, 0, BUFSIZE);
@@ -21,17 +21,19 @@ void makePodKey(char *podId, char *podKey) {
 }
 
 void createPod(Pod pod, char *body) {
-    char *podKey = (char *)malloc(sizeof(char) * BUFSIZE);
+    char *podKey = (char *) malloc(sizeof(char) * BUFSIZE);
     makePodKey(pod.id, podKey);
     char *podConfig = pod.config;
-    EtcdParams *etcdParams = (EtcdParams *)malloc(sizeof(EtcdParams));
+    EtcdParams *etcdParams = (EtcdParams *) malloc(sizeof(EtcdParams));
     etcdParams->key = podKey;
     etcdParams->params = podConfig;
     put(etcdParams, body, ETCD_HOST);
 }
 
-void getPod(char *params, char *body) {
-
+void getPod(char *podId, char *body) {
+    char *key = (char *)malloc(sizeof(char) * BUFSIZE);
+    makePodKey(podId, key);
+    get(key, body, ETCD_HOST);
 }
 
 
