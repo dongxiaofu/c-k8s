@@ -26,7 +26,7 @@ typedef struct EtcdParams{
     char *params;
 }EtcdParams;
 
-void put(EtcdParams *params, char *body, char *host);
+void put(EtcdParams *etcdParams, char *bodyData, char *host);
 
 void get(char *params, char *body, char *host);
 

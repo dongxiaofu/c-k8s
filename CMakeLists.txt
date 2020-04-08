@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(.)
 
+add_subdirectory(utils/cJSON)
+
 add_executable(apiServer
         apiServer.c http/http.h http/http.c)
 
@@ -21,4 +23,6 @@ add_executable(test_etcdClient
         etcd-client/etcdClient.c
         etcd-client/etcdClient.h
         http/http.h
-        http/http.c)
+        http/http.c
+        utils/cJSON/cJSON.h
+        utils/cJSON/cJSON.c)

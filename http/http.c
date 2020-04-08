@@ -3,7 +3,7 @@
 //
 #include "http.h"
 
-void put(EtcdParams *etcdParams, char *body, char *host) {
+void put(EtcdParams *etcdParams, char *bodyData, char *host) {
     char *params = etcdParams->params;
     char *key = etcdParams->key;
     int clientSocket = tcpConnect(host);
@@ -39,19 +39,22 @@ void put(EtcdParams *etcdParams, char *body, char *host) {
     FD_ZERO(&fdSet);
     FD_SET(clientSocket, &fdSet);
 
+    memset(bodyData, 0, BUFSIZE);
+    int bodyLength = -1;
     while (1) {
         sleep(1);
         tv.tv_sec = 0;
         tv.tv_usec = 0;
         int h = 0;
         h = select(clientSocket + 1, &fdSet, NULL, NULL, &tv);
+        if (h == 0) {
+            continue;
+        }
         if (h < 0) {
             close(clientSocket);
             perror("select");
             return;
         }
-
-        memset(body, 0, BUFSIZE);
         if (h > 0) {
             int dataSize = sizeof(char) * BUFSIZE;
             char *line = (char *) malloc(dataSize);
@@ -60,9 +63,29 @@ void put(EtcdParams *etcdParams, char *body, char *host) {
                 printf("read over\n");
                 break;
             }
-            parseHttp(line, body);
-            close(clientSocket);
-            break;
+            // todo 重复代码；第一次写出来的代码，第二次写，竟然无能力快速写对。
+            // 思路：第一次收到的数据保护HTTP请求头，将此去掉，才能获得实体数据；
+            // 第二次收到的数据全部是实体数据，不必处理，直接拼接到第一次解析出来的实体数据后面。
+            // 第一次收到数据，从HTTP请求头中获取实体数据长度L。当接收到的实体数据长度和L相等时，断开连接。
+            // 注意C语法，不能使用line，若使用，会出现死循环。原因不明，只能留心。
+            char *tmp = (char *) malloc(sizeof(line));
+            memset(tmp, 0, sizeof(line));
+            strcat(tmp, line);
+            char *body = (char *) malloc(sizeof(char) * BUFSIZE);
+            if (bodyLength == -1) {
+                parseHttp(tmp, body);
+            } else {
+                strcat(body, line);
+            }
+
+            strcat(bodyData, body);
+            if (bodyLength == -1) {
+                bodyLength = getContentLength(line);
+            }
+            if (bodyLength == strlen(bodyData)) {
+                close(clientSocket);
+                break;
+            }
         }
     }
 }

@@ -1,0 +1,3 @@
+[submodule "utils/cJSON"]
+	path = utils/cJSON
+	url = https://github.com/gangganghong/cJSON.git
