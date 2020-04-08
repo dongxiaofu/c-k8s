@@ -117,6 +117,8 @@ void get(char *params, char *bodyData, char *host) {
             memset(tmp, 0, sizeof(str));
             strcat(tmp, str);
             if (contentLength == -1) {
+                // todo 第一个参数使用str时，str存储的数据无穷无尽，有超过百万个字符。
+                // todo 原因未知，使用tmp代替str后，问题消失。下次我可能还会犯这个错误。
                 parseHttp(tmp, body);
             } else {
                 strcat(body, tmp);
