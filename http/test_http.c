@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "http/http.h"
 
+void test_parseHttp();
 
 int main() {
 //    char *body;
@@ -28,6 +29,28 @@ int main() {
 //    get(params2, body2, ETCD_HOST);
 //    printf("body2:%s\n", body2);
 
+    test_parseHttp();
 
     return 0;
+}
+
+void test_parseHttp(){
+    char *str = "HTTP/1.1 200 OK\n"
+                "Access-Control-Allow-Headers: accept, content-type, authorization\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE\n"
+                "Access-Control-Allow-Origin: *\n"
+                "Content-Type: application/json\n"
+                "X-Etcd-Cluster-Id: cdf818194e3a8c32\n"
+                "X-Etcd-Index: 32\n"
+                "X-Raft-Index: 41\n"
+                "X-Raft-Term: 4\n"
+                "Date: Wed, 08 Apr 2020 00:36:25 GMT\n"
+                "Content-Length: 793\r\n"
+                "\r\n"
+                "{\"action\":\"get\",\"node\":{\"key\":\"/registry/pods/nginx2\",\"value\":\"{\\n  \\\"kind\\\": \\\"Pod\\\",\\n  \\\"apiVersion\\\": \\\"v1beta1\\\",\\n  \\\"id\\\": \\\"php\\\",\\n  \\\"desiredState\\\": {\\n    \\\"manifest\\\": {\\n      \\\"version\\\": \\\"v1beta1\\\",\\n      \\\"id\\\": \\\"php\\\",\\n      \\\"containers\\\": [{\\n        \\\"name\\\": \\\"nginx\\\",\\n        \\\"image\\\": \\\"nginx\\\",\\n        \\\"ports\\\": [{\\n          \\\"containerPort\\\": 80,\\n          \\\"hostPort\\\": 8082\\n        }],\\n        \\\"livenessProbe\\\": {\\n          \\\"enabled\\\": true,\\n          \\\"type\\\": \\\"http\\\",\\n          \\\"initialDelaySeconds\\\": 30,\\n          \\\"httpGet\\\": {\\n            \\\"path\\\": \\\"/index.html\\\",\\n            \\\"port\\\": \\\"8082\\\"\\n       ============str\n"
+                "   }\\n        }\\n      }]\\n    }\\n  },\\n  \\\"labels\\\": {\\n    \\\"name\\\": \\\"foo\\\"\\n  }\\n}\\n\",\"modifiedIndex\":30,\"createdIndex\":30}}";
+
+    char *body = (char *)malloc(sizeof(char) * BUFSIZE);
+    parseHttp(str,body);
+    printf("======================body\n%s", body);
 }

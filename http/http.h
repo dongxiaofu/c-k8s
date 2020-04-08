@@ -32,6 +32,8 @@ void get(char *params, char *body, char *host);
 
 void parseHttp(char *data, char *body);
 
+int getContentLength(char *line);
+
 
 
 

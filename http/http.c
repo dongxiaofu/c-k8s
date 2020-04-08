@@ -67,13 +67,12 @@ void put(EtcdParams *etcdParams, char *body, char *host) {
     }
 }
 
-void get(char *params, char *body, char *host) {
+void get(char *params, char *bodyData, char *host) {
     int clientSocket = tcpConnect(host);
     fd_set fdSet;
     struct timeval tv;
     int dataLen = BUFSIZE * 4;
     char str1[dataLen];
-
     memset(str1, 0, dataLen);
     strcat(str1, "GET /v2/keys");
     strcat(str1, params);
@@ -83,17 +82,24 @@ void get(char *params, char *body, char *host) {
     strcat(str1, ":");
     strcat(str1, SERVER_PORT_STR);
     strcat(str1, "\n");
+    strcat(str1, "Connection: closed\n");
     strcat(str1, "\r\n");
+
     write(clientSocket, str1, strlen(str1));
 
     FD_ZERO(&fdSet);
     FD_SET(clientSocket, &fdSet);
-
+    int bodyDataLength = sizeof(char) * BUFSIZE * 4;
+    memset(bodyData, 0, bodyDataLength);
+    int contentLength = -1;
     while (1) {
         sleep(2);
         tv.tv_sec = 0;
         tv.tv_usec = 0;
         int h = select(clientSocket + 1, &fdSet, NULL, NULL, &tv);
+        if (h == 0) {
+            continue;
+        }
         if (h < 0) {
             perror("select");
             return;
@@ -105,10 +111,25 @@ void get(char *params, char *body, char *host) {
             if (n == -1) {
                 break;
             }
+            char *body = (char *) malloc(sizeof(char) * BUFSIZE);
             memset(body, 0, dataLen);
-            parseHttp(str, body);
-            close(clientSocket);
-            break;
+            char *tmp = (char *) malloc(sizeof(str));
+            memset(tmp, 0, sizeof(str));
+            strcat(tmp, str);
+            if (contentLength == -1) {
+                parseHttp(tmp, body);
+            } else {
+                strcat(body, tmp);
+            }
+            strcat(bodyData, body);
+            if (contentLength == -1) {
+                contentLength = getContentLength(str);
+            }
+            int bodyDataLength = strlen(bodyData);
+            if (bodyDataLength == contentLength) {
+                close(clientSocket);
+                break;
+            }
         }
     }
 }
@@ -173,5 +194,32 @@ int tcpConnect(const char *host) {
     printf("连接到etcd:%d\n", clientSocket);
 
     return clientSocket;
+}
+
+int getContentLength(char *line) {
+    printf("getContentLength start\n");
+    int length = 0;
+    regmatch_t pmatch;
+    regex_t regex;
+    const char *pattern = "Content-Length";
+    regcomp(&regex, pattern, REG_EXTENDED);
+    int offset = 0;
+    while (offset < strlen(line)) {
+        int status = regexec(&regex, line + offset, 1, &pmatch, 0);
+        /* 匹配正则表达式，注意regexec()函数一次只能匹配一个，不能连续匹配，网上很多示例并没有说明这一点 */
+        if (status == REG_NOMATCH) {
+            //            printf("No Match\n");
+        } else if (pmatch.rm_so != -1) {
+            char *rest;
+            char c = ':';
+            rest = strchr(line + offset + pmatch.rm_eo, c);
+            rest++;
+            length = atoi(rest);
+            return length;
+        }
+        offset += pmatch.rm_eo;
+    }
+    regfree(&regex);        //释放正则表达式
+    return length;
 }
 
