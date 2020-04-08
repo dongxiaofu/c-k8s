@@ -125,8 +125,13 @@ void get(char *params, char *bodyData, char *host) {
             }
             strcat(bodyData, body);
             if (contentLength == -1) {
+                // todo 神奇，此处若使用tmp，getContentLength内部循环就是死循环
+                // todo 是因为，上面parseHttp改变了tmp吗？
+                // todo 暂不理会这类问题，遇到了奇怪问题，就朝着方面想，猜测修改
                 contentLength = getContentLength(str);
             }
+            free(tmp);
+//            free(str);
             int bodyDataLength = strlen(bodyData);
             if (bodyDataLength == contentLength) {
                 close(clientSocket);
@@ -199,7 +204,6 @@ int tcpConnect(const char *host) {
 }
 
 int getContentLength(char *line) {
-    printf("getContentLength start\n");
     int length = 0;
     regmatch_t pmatch;
     regex_t regex;

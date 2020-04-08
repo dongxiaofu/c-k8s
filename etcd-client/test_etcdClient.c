@@ -55,7 +55,7 @@ void test_CreatePod() {
 }
 
 void test_getPod() {
-    char podId[7] = "php";
+    char podId[7] = "nginx2";
     char *body = (char *)malloc(sizeof(char) * BUFSIZE * 4);
     printf("===========test\n");
     getPod(podId, body);
