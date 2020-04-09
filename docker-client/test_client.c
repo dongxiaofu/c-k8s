@@ -5,6 +5,9 @@
 #include "client.h"
 
 int main(){
+//    printf("hello");
     char *resp = createContainer();
-    printf("=============resp\n%s", resp);
+    printf("=============resp\n%s\n\n", resp);
+    printf("len = %lu\n", strlen(resp));
+
 }

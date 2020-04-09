@@ -169,7 +169,9 @@ void parseHttp(char *data, char *body) {
     memset(line, 0, BUFSIZE);
     int j = 0;
     int k = 0;
-    memset(body, 0, BUFSIZE);
+    // todo 学习
+    char *r = body;
+//    memset(body, 0, BUFSIZE);
     for (int i = 0; i < strlen(data); i++) {
         char c;
         c = data[i];
@@ -181,7 +183,8 @@ void parseHttp(char *data, char *body) {
                     if (data[i++] == 13) {
                         if (data[i++] == 10) {
                             for (; i < strlen(data); i++) {
-                                body[k++] = data[i];
+                                // todo 学习
+                                r[k++] = data[i];
                             }
                             break;
                         } else {

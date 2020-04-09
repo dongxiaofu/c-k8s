@@ -31,6 +31,6 @@ char *getContainer();
 
 char *createContainer();
 
-void parseHttp(char *data, char *body);
+char *parseHttp(char *data);
 
-int getContentLength(char *line);
+int getContentLength(const char *line);
