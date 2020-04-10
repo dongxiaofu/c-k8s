@@ -150,7 +150,7 @@ char *parseHttp(char *data) {
 }
 
 int getContentLength(const char *line) {
-    return 3686;
+//    return 3686;
 //    char *nline = line;
 //    memset(nline, 0, strlen(line));
 //    memcpy(nline, line, strlen(line));
