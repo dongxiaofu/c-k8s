@@ -216,7 +216,7 @@ int tcpConnect(const char *host) {
         return 1;
     }
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(SERVER_PORT);
+    serverAddr.sin_port = htons(80);
     serverAddr.sin_addr.s_addr = inet_addr(host);
 
     if (connect(clientSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr)) < 0) {
@@ -253,5 +253,25 @@ int getContentLength(char *line) {
     }
     regfree(&regex);        //释放正则表达式
     return length;
+}
+
+int unixConn() {
+    int sockfd;
+    if ((sockfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    struct sockaddr_un servaddr;
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sun_family = AF_UNIX;
+    strcpy(servaddr.sun_path, SOCK_PATH);
+
+    if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
+        perror("connect");
+        exit(EXIT_FAILURE);
+    }
+
+    return sockfd;
 }
 

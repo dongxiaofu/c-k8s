@@ -18,7 +18,8 @@ add_executable(apiServer
 
 #test
 add_executable(test_http
-        http/test_http.c http/http.h http/http.c)
+        http/test_http.c http/http.h http/http.c
+        http/httpClient.h http/httpClient.c)
 
 add_executable(test_etcdClient
         etcd-client/test_etcdClient.c
