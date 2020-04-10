@@ -25,8 +25,85 @@ int unixConn() {
     return sockfd;
 }
 
+char *getContainerList() {
+    printf("7777");
+    int sockfd = unixConn();
+    fd_set fdSet;
+    struct timeval tv;
+    int dataLen = BUF_SIZE * 4;
+    char str1[dataLen];
+    memset(str1, 0, dataLen);
+    strcat(str1, "GET /v1.39/containers/json?filters={\"status\":[\"running\"]}");
+    strcat(str1, " HTTP/1.1\r\n");
+    strcat(str1, "Host: 127.0.0.1\r\n");
+    // todo 请求头结束之后，只有一个回车换行符\r\n。无论有无实体数据，这个分割符不能少。
+    strcat(str1, "\r\n");
+
+    write(sockfd, str1, strlen(str1));
+
+    FD_ZERO(&fdSet);
+    int const bodyDataLength = sizeof(char) * BUF_SIZE * 70;
+    char *bodyData = (char *) malloc(sizeof(char) * BUF_SIZE * 70);
+    int bodyLength = -1;
+    while (1) {
+        FD_SET(sockfd, &fdSet);
+        // todo 不停顿，异常；停顿，如何提升吞吐量？
+        sleep(1);
+        tv.tv_sec = 1;
+        tv.tv_usec = 1;
+        int h = 0;
+        h = select(sockfd + 1, &fdSet, NULL, NULL, &tv);
+        if (h == 0) {
+            close(sockfd);
+            break;
+        }
+        if (h < 0) {
+            close(sockfd);
+            perror("select");
+            return NULL;
+        }
+        if (h > 0) {
+            int dataSize = sizeof(char) * BUF_SIZE;
+            char *line = (char *) malloc(dataSize);
+            int len = read(sockfd, line, dataSize);
+            printf("========len:%s\n", line);
+            if (len == -1) {
+                printf("read over\n");
+                break;
+            }
+            // todo 重复代码；第一次写出来的代码，第二次写，竟然无能力快速写对。
+            // 思路：第一次收到的数据保护HTTP请求头，将此去掉，才能获得实体数据；
+            // 第二次收到的数据全部是实体数据，不必处理，直接拼接到第一次解析出来的实体数据后面。
+            // 第一次收到数据，从HTTP请求头中获取实体数据长度L。当接收到的实体数据长度和L相等时，断开连接。
+            // 注意C语法，不能使用line，若使用，会出现死循环。原因不明，只能留心。
+            char *tmp = (char *) malloc(sizeof(line));
+            memset(tmp, 0, sizeof(line));
+            strcat(tmp, line);
+            char *body = NULL;
+            if (bodyLength == -1) {
+                body = parseHttp(tmp);
+            } else {
+                body = tmp;
+            }
+            strcat(bodyData, body);
+
+            if (bodyLength == -1) {
+                // todo 当getContentLength执行结束，tmp2会被释放吗？
+                bodyLength = getContentLength(line);
+            }
+            int bodyDataLength2 = strlen(bodyData);
+            // 当select值为0时断开，这里是否没有必要？
+            if (bodyLength == bodyDataLength2) {
+                close(sockfd);
+                break;
+            }
+        }
+    }
+    return bodyData;
+}
+
 char *createContainer() {
-//    printf("7777");
+    printf("7777");
     int sockfd = unixConn();
     fd_set fdSet;
     struct timeval tv;

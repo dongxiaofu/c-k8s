@@ -25,7 +25,7 @@
 
 int unixConn();
 
-char *getContainerList(char *);
+char *getContainerList();
 
 char *getContainer();
 
