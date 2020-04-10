@@ -27,35 +27,26 @@ int unixConn() {
 
 char *createContainer() {
 //    printf("7777");
-//    puts("777");
     int sockfd = unixConn();
-
     fd_set fdSet;
     struct timeval tv;
     int dataLen = BUF_SIZE * 4;
     char str1[dataLen];
     memset(str1, 0, dataLen);
     strcat(str1, "GET /v1.39/containers/json?filters={\"status\":[\"running\"]}");
-    strcat(str1, " HTTP/1.1\n");
-    strcat(str1, "Host: 127.0.0.1\n");
+    strcat(str1, " HTTP/1.1\r\n");
+    strcat(str1, "Host: 127.0.0.1\r\n");
     // todo 请求头结束之后，只有一个回车换行符\r\n。无论有无实体数据，这个分割符不能少。
     strcat(str1, "\r\n");
 
     write(sockfd, str1, strlen(str1));
 
     FD_ZERO(&fdSet);
-
-    FD_SET(sockfd, &fdSet);
-
     int const bodyDataLength = sizeof(char) * BUF_SIZE * 70;
-//    printf("7777");
-//    printf("==============bodyDataLength==========%d\n", 3);
     char *bodyData = (char *) malloc(sizeof(char) * BUF_SIZE * 70);
-//    memset(bodyData, 0, sizeof(char) * BUF_SIZE * 70);
-//    char *bodyData = NULL;
     int bodyLength = -1;
-    int total = 0;
     while (1) {
+        FD_SET(sockfd, &fdSet);
         // todo 不停顿，异常；停顿，如何提升吞吐量？
         sleep(1);
         tv.tv_sec = 1;
@@ -63,7 +54,6 @@ char *createContainer() {
         int h = 0;
         h = select(sockfd + 1, &fdSet, NULL, NULL, &tv);
         if (h == 0) {
-            printf("================h=0\n");
             close(sockfd);
             break;
         }
@@ -75,13 +65,8 @@ char *createContainer() {
         if (h > 0) {
             int dataSize = sizeof(char) * BUF_SIZE;
             char *line = (char *) malloc(dataSize);
-            printf("=================start to read\n");
             int len = read(sockfd, line, dataSize);
-            total += len;
-            printf("==========total = %d\n", total);
-            int lineLength = strlen(line);
-            printf("==========len = %d\tdatSize = %d\tlength = %d\n", len, dataSize, lineLength);
-            printf("=============line\n%s\n", line);
+            printf("========len:%s\n", line);
             if (len == -1) {
                 printf("read over\n");
                 break;
@@ -94,43 +79,26 @@ char *createContainer() {
             char *tmp = (char *) malloc(sizeof(line));
             memset(tmp, 0, sizeof(line));
             strcat(tmp, line);
-//            continue;
             char *body = NULL;
             if (bodyLength == -1) {
                 body = parseHttp(tmp);
             } else {
-//                strcat(body, tmp);
                 body = tmp;
             }
             strcat(bodyData, body);
 
             if (bodyLength == -1) {
-                printf("==================counter===========\n");
-//                char *tmp2 = (char *) malloc(strlen(line));
-//                memset(tmp2, 0, strlen(line));
-//                strcat(tmp2, line);
                 // todo 当getContentLength执行结束，tmp2会被释放吗？
                 bodyLength = getContentLength(line);
-//                bodyLength = 43011;
             }
-//            free(line);
-//            line = NULL;
             int bodyDataLength2 = strlen(bodyData);
-            printf("\n444444444=====%d=====%d====\n", bodyLength, bodyDataLength2);
             // 当select值为0时断开，这里是否没有必要？
             if (bodyLength == bodyDataLength2) {
-                printf("\n=====%d=====%d====\n", bodyLength, bodyDataLength2);
-//                close(sockfd);
-//                free(line);
-//                free(tmp);
-//                break;
+                close(sockfd);
+                break;
             }
-
-//            free(line);
-//            free(tmp);
         }
     }
-    printf("\n=================over\n");
     return bodyData;
 };
 
@@ -182,15 +150,16 @@ char *parseHttp(char *data) {
 }
 
 int getContentLength(const char *line) {
-//    return 3684;
+    return 3686;
 //    char *nline = line;
 //    memset(nline, 0, strlen(line));
 //    memcpy(nline, line, strlen(line));
     int length = 0;
     regmatch_t *pmatch = (regmatch_t *) malloc(sizeof(regmatch_t));
     regex_t *regex = (regex_t *) malloc(sizeof(regex_t));
-    char *pattern = "Content-Length";
 //    char *pattern = "Content-Length";
+//    char *pattern = "Content-Length: [0-9]*?";
+    char *pattern = "Content-Length";
     regcomp(regex, pattern, REG_EXTENDED);
     int offset = 0;
     while (offset < strlen(line)) {
